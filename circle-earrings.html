@@ -13,6 +13,9 @@
   <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
   <script type="text/javascript" src="paper-full.js"></script>
   <script type="text/javascript">
+    // Mixing imperial and metric units is awful, but it's practical: I think in
+    // imperial units, but so far it's been easier  to get mass numbers for
+    // wood and other materials in metric. Sob.
     var MM_PER_INCH = 25.4;
     var PI = 3.141592;
 
@@ -60,8 +63,6 @@
       var outer = total;
       for (var i = 0; i < numRings; i++) {
         var inner = outer - width;
-        console.log(outer);
-        console.log(inner);
         drawRing(px(outer), px(inner));
         mass += ringMass(outer, inner, depth, WOOD_DENSITY);
         outer = inner - gap;
