@@ -1,0 +1,121 @@
+<html>
+<head>
+  <style>
+    #myCanvas {
+      border: 1px solid black;
+      width: 1000px;
+      margin-top: 1em;
+    }
+    #total-mass {
+      font-weight: bold;
+    }
+  </style>
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <script type="text/javascript" src="paper-full.js"></script>
+  <script type="text/javascript">
+    var MM_PER_INCH = 25.4;
+    var PI = 3.141592;
+
+    var WATER_DENSITY = 0.001;  // Grams / mm^3
+    var WOOD_DENSITY = WATER_DENSITY * 0.75;  // Gravity ratio of padauk.
+
+    var px = function(inches) {
+      var pxPerInch = eval($('#px-per-inch')[0].value);
+      return inches * pxPerInch;
+    };
+
+    var drawRing = function(outerRadius, innerRadius) {
+      var outer = new paper.Path.Circle({
+        center: paper.view.center,
+        radius: outerRadius,
+        fillColor: 'brown',
+      });
+      var inner = new paper.Path.Circle({
+        center: paper.view.center,
+        radius: innerRadius,
+        fillColor: 'white',
+      });
+    };
+
+    var ringMass = function(outerRadius, innerRadius, depth, density) {
+      var outerMm = outerRadius * MM_PER_INCH;
+      var innerMm = innerRadius * MM_PER_INCH;
+      var depthMm = depth * MM_PER_INCH;
+
+      var surfaceArea = (PI * outerMm * outerMm) - (PI * innerMm * innerMm);
+      var volume = surfaceArea * depthMm;
+      return volume * density;
+    }
+
+    var doDrawing = function() {
+      paper.project.clear();
+
+      var numRings = eval($('#num-rings')[0].value);
+      var total = eval($('#total-radius')[0].value);
+      var width = eval($('#ring-width')[0].value);
+      var depth = eval($('#ring-depth')[0].value);
+      var gap = eval($('#ring-gap')[0].value);
+
+      var mass = 0;
+      var outer = total;
+      for (var i = 0; i < numRings; i++) {
+        var inner = outer - width;
+        console.log(outer);
+        console.log(inner);
+        drawRing(px(outer), px(inner));
+        mass += ringMass(outer, inner, depth, WOOD_DENSITY);
+        outer = inner - gap;
+      }
+      $('#total-mass').text(mass.toPrecision(4));
+
+  		paper.view.draw();
+    };
+
+    $(document).ready(function() {
+  		paper.setup($('#myCanvas')[0]);
+      doDrawing();
+
+      $('input').change(doDrawing);
+    });
+  </script>
+</head>
+<body>
+  <table>
+    <tr>
+      <td>Pixels per inch</td>
+      <td><input type="text" id="px-per-inch" value="132"></td>
+    </tr>
+    <tr>
+      <td>Total radius</td>
+      <td><input type="text" id="total-radius" value="14/16"></td>
+      <td>inches</td>
+    </tr>
+    <tr>
+      <td>Number of rings</td>
+      <td><input type="text" id="num-rings" value="4"></td>
+      <td>inches</td>
+    </tr>
+    <tr>
+      <td>Ring width</td>
+      <td><input type="text" id="ring-width" value="1/8"></td>
+      <td>inches</td>
+    </tr>
+    <tr>
+      <td>Gap between rings</td>
+      <td><input type="text" id="ring-gap" value="3/32"></td>
+      <td>inches</td>
+    </tr>
+    <tr>
+      <td>Ring depth</td>
+      <td><input type="text" id="ring-depth" value="1/8"></td>
+      <td>inches</td>
+      <td>(affects mass, not profile)
+    </tr>
+    <tr>
+      <td>Total mass</td>
+      <td><span id="total-mass"></span></td>
+      <td>grams</td>
+  </table>
+  <canvas id="myCanvas" resize></canvas>
+</body>
+</html>
