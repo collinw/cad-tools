@@ -1,0 +1,233 @@
+<html>
+<head>
+  <style>
+    #myCanvas {
+      border: 1px solid black;
+      width: 1000px;
+      margin-top: 1em;
+    }
+    #total-mass {
+      font-weight: bold;
+    }
+  </style>
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <script type="text/javascript" src="paper-full.js"></script>
+  <script type="text/javascript" src="fraction.js"></script>
+  <script type="text/javascript">
+    // Mixing imperial and metric units is awful, but it's practical: I think in
+    // imperial units, but so far it's been easier to get mass numbers for
+    // wood and other materials in metric. Sob.
+    var MM_PER_INCH = 25.4;
+    var PI = 3.141592;
+
+    var WATER_DENSITY = 0.001;  // Grams / mm^3
+    
+    // Source: http://www.wood-database.com/african-padauk/
+    var PADAUK_DENSITY = WATER_DENSITY * 0.75;
+    // Source: http://www.wood-database.com/hard-maple/
+    var MAPLE_DENSITY = WATER_DENSITY * 0.71;
+
+    var px = function(inches) {
+      var pxPerInch = eval($('#px-per-inch')[0].value);
+      return inches * pxPerInch;
+    };
+    
+    var mm = function(inches) {
+      return inches * MM_PER_INCH;
+    }
+    
+    var pxToMm = function(px) {
+      var pxPerInch = eval($('#px-per-inch')[0].value);
+      return mm(px / pxPerInch);
+    }
+
+    var doDrawing = function() {
+      paper.project.clear();
+      
+      var parts = new Array();
+      
+      var height = eval($('#total-height')[0].value);
+      var width = eval($('#total-width')[0].value);
+      var depth = eval($('#depth')[0].value);
+      var stileWidth = eval($('#stile-width')[0].value);
+      var railHeight = eval($('#rail-height')[0].value);
+
+      // Make the frame appear centered in the canvas.
+      var totalDims = new paper.Point(px(width), px(height));
+      var topLeft = paper.view.center.subtract(totalDims.divide(2));
+      var bottomRight = topLeft.add(totalDims);
+      var bottomLeft = bottomRight.subtract(new paper.Point(px(width), 0));
+      
+      var topCenter = topLeft.add(new paper.Point(px(width), 0));
+      
+      // Draw the stiles.
+      parts.push(new paper.Path.Rectangle({
+        point: topLeft,
+        size: [px(stileWidth), px(height)],
+        strokeColor: 'black',
+          fillColor: 'brown',
+      }));
+      parts.push(new paper.Path.Rectangle({
+        point: topLeft.add(new paper.Point(px(width) - px(stileWidth), 0)),
+        size: [px(stileWidth), px(height)],
+        strokeColor: 'black',
+          fillColor: 'brown',
+      }));
+      
+      // Draw the rails.
+      var railWidth = width - 2 * stileWidth;
+      parts.push(new paper.Path.Rectangle({
+        point: topLeft.add(new paper.Point(px(stileWidth), 0)),
+        size: [px(railWidth), px(railHeight)],
+        strokeColor: 'black',
+          fillColor: 'brown',
+      }));
+      parts.push(new paper.Path.Rectangle({
+        point: bottomLeft.add(new paper.Point(px(stileWidth), -px(railHeight))),
+        size: [px(railWidth), px(railHeight)],
+        strokeColor: 'black',
+          fillColor: 'brown',
+      }));
+      
+      var screenTopLeft = topLeft.add(new paper.Point(px(stileWidth), px(railHeight)));
+      var screenWidth = width - stileWidth * 2;
+      var screenHeight = height - railHeight * 2;
+      
+      var numVertKumiko = eval($('#num-vert-kumiko')[0].value);
+      var numHorzKumiko = eval($('#num-horz-kumiko')[0].value);
+      var kumikoFace = eval($('#kumiko-face')[0].value);
+      
+      var vertSpacing = screenWidth / (numVertKumiko + 1);
+      var horzSpacing = screenHeight / (numHorzKumiko + 1);
+      $('#vert-spacing').text(new Fraction(vertSpacing).toFraction());
+      $('#horz-spacing').text(new Fraction(horzSpacing).toFraction());
+      
+      // Draw vertical kumiko.
+      for (var i = 1; i <= numVertKumiko; i++) {
+        var horzOffset = vertSpacing * i - (kumikoFace / 2);
+        parts.push(new paper.Path.Rectangle({
+          point: screenTopLeft.add(new paper.Point(px(horzOffset), 0)),
+          size: [px(kumikoFace), px(screenHeight)],
+          strokeColor: 'black',
+          fillColor: 'brown',
+        }));
+      }
+      
+      // Draw horizontal kumiko.
+      for (var i = 1; i <= numHorzKumiko; i++) {
+        var vertOffset = horzSpacing * i - (kumikoFace / 2);
+        parts.push(new paper.Path.Rectangle({
+          point: screenTopLeft.add(new paper.Point(0, px(vertOffset))),
+          size: [px(screenWidth), px(kumikoFace)],
+          strokeColor: 'black',
+          fillColor: 'brown',
+        }));
+      }
+      
+      // Calculate how much the thing masses.
+      var totalMass = 0;
+      parts.forEach(function(part) {
+        var partVolumeMm = pxToMm(part.bounds.width) * pxToMm(part.bounds.height) * mm(depth);
+        var partMass = partVolumeMm * MAPLE_DENSITY;
+        totalMass += partMass;
+      });
+      $('#total-mass').text(totalMass.toPrecision(3));
+
+      paper.view.draw();
+    };
+    
+    var zoom = function(zoomScale) {
+      console.log('Zooming!');
+      var curZoom = eval($('#px-per-inch')[0].value);
+      $('#px-per-inch').val(curZoom * zoomScale);
+      doDrawing();
+    };
+
+    $(document).ready(function() {
+  		paper.setup($('#myCanvas')[0]);
+      doDrawing();
+
+      $('input').change(doDrawing);
+      $('#zoom-in').click(function() { zoom(2) });
+      $('#zoom-out').click(function() { zoom(1/2) });
+    });
+  </script>
+</head>
+<body>
+  <table>
+    <tr>
+      <td>
+        <table>
+          <tr>
+            <td>Pixels per inch</td>
+            <td><input type="text" id="px-per-inch" value="264"></td>
+            <td>
+              <input type="button" id="zoom-in" value="+">
+              <input type="button" id="zoom-out" value="-">
+            </td>
+          </tr>
+          <tr>
+            <td>Total height</td>
+            <td><input type="text" id="total-height" value="12/8"></td>
+            <td>inches</td>
+          </tr>
+          <tr>
+            <td>Total width</td>
+            <td><input type="text" id="total-width" value="7/8"></td>
+            <td>inches</td>
+          </tr>
+          <tr>
+            <td>Stile width</td>
+            <td><input type="text" id="stile-width" value="1/8"></td>
+            <td>inches</td>
+          </tr>
+          <tr>
+            <td>Rail height</td>
+            <td><input type="text" id="rail-height" value="1/8"></td>
+            <td>inches</td>
+          </tr>
+          <tr>
+            <td>Depth</td>
+            <td><input type="text" id="depth" value="1/16"></td>
+            <td>inches</td>
+            <td>(affects mass)</td>
+          </tr>
+          <tr>
+            <td>Total mass</td>
+            <td><span id="total-mass"></span></td>
+            <td>grams</td>
+          </tr>
+        </table>
+      </td>
+      <td>
+        <table>
+          <tr>
+            <td>Num vertical kumiko</td>
+            <td><input type="text" id="num-vert-kumiko" value="2"></td>
+          </tr>
+          <tr>
+            <td>Num horizontal kumiko</td>
+            <td><input type="text" id="num-horz-kumiko" value="7"></td>
+          </tr>
+          <tr>
+            <td>Kumiko face</td>
+            <td><input type="text" id="kumiko-face" value="1/32"></td>
+            <td>inches</td>
+          </tr>
+          <tr>
+            <td>Vertical spacing</td>
+            <td><span id="vert-spacing"></span></td>
+            <td>inches</td>
+          </tr>
+          <tr>
+            <td>Horizontal spacing</td>
+            <td><span id="horz-spacing"></span></td>
+            <td>inches</td>
+          </tr>
+        </tr>
+      </table>
+    </td>
+  </table>
+  <canvas id="myCanvas" resize></canvas>
+</body>
+</html>
