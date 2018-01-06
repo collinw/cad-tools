@@ -21,7 +21,7 @@
     var PI = 3.141592;
 
     var WATER_DENSITY = 0.001;  // Grams / mm^3
-    
+
     // Source: http://www.wood-database.com/african-padauk/
     var PADAUK_DENSITY = WATER_DENSITY * 0.75;
     // Source: http://www.wood-database.com/hard-maple/
@@ -31,11 +31,11 @@
       var pxPerInch = eval($('#px-per-inch')[0].value);
       return inches * pxPerInch;
     };
-    
+
     var mm = function(inches) {
       return inches * MM_PER_INCH;
     }
-    
+
     var pxToMm = function(px) {
       var pxPerInch = eval($('#px-per-inch')[0].value);
       return mm(px / pxPerInch);
@@ -43,9 +43,9 @@
 
     var doDrawing = function() {
       paper.project.clear();
-      
+
       var parts = new Array();
-      
+
       var height = eval($('#total-height')[0].value);
       var width = eval($('#total-width')[0].value);
       var depth = eval($('#depth')[0].value);
@@ -57,9 +57,9 @@
       var topLeft = paper.view.center.subtract(totalDims.divide(2));
       var bottomRight = topLeft.add(totalDims);
       var bottomLeft = bottomRight.subtract({x: px(width), y: 0});
-      
+
       var topCenter = topLeft.add({x: px(width), y: 0});
-      
+
       // Draw the stiles.
       parts.push(new paper.Path.Rectangle({
         point: topLeft,
@@ -73,7 +73,7 @@
         strokeColor: 'black',
           fillColor: 'brown',
       }));
-      
+
       // Draw the rails.
       var railWidth = width - 2 * stileWidth;
       parts.push(new paper.Path.Rectangle({
@@ -88,42 +88,47 @@
         strokeColor: 'black',
           fillColor: 'brown',
       }));
-      
+
       var screenTopLeft = topLeft.add({x: px(stileWidth), y: px(railHeight)});
       var screenWidth = width - stileWidth * 2;
       var screenHeight = height - railHeight * 2;
-      
+
       var numVertKumiko = eval($('#num-vert-kumiko')[0].value);
       var numHorzKumiko = eval($('#num-horz-kumiko')[0].value);
       var kumikoFace = eval($('#kumiko-face')[0].value);
-      
-      var vertSpacing = screenWidth / (numVertKumiko + 1);
-      var horzSpacing = screenHeight / (numHorzKumiko + 1);
+
+      // The spacing is calculated to make it easy to mark on the materials:
+      // spacing numbers are offsets from the trailing edge of the previous
+      // piece, moving left to right or top to bottom.
+      var vertSpacing = (screenWidth - (kumikoFace * numVertKumiko)) / (numVertKumiko + 1);
+      var horzSpacing = (screenHeight - (kumikoFace * numHorzKumiko)) / (numHorzKumiko + 1);
       $('#vert-spacing').text(new Fraction(vertSpacing).toFraction());
       $('#horz-spacing').text(new Fraction(horzSpacing).toFraction());
-      
+
       // Draw vertical kumiko.
+      var offset = vertSpacing;
       for (var i = 1; i <= numVertKumiko; i++) {
-        var horzOffset = vertSpacing * i - (kumikoFace / 2);
         parts.push(new paper.Path.Rectangle({
-          point: screenTopLeft.add({x: px(horzOffset), y: 0}),
+          point: screenTopLeft.add({x: px(offset), y: 0}),
           size: [px(kumikoFace), px(screenHeight)],
           strokeColor: 'black',
           fillColor: 'brown',
         }));
+        offset += kumikoFace + vertSpacing;
       }
-      
+
       // Draw horizontal kumiko.
+      var offset = horzSpacing
       for (var i = 1; i <= numHorzKumiko; i++) {
-        var vertOffset = horzSpacing * i - (kumikoFace / 2);
         parts.push(new paper.Path.Rectangle({
-          point: screenTopLeft.add({x: 0, y: px(vertOffset)}),
+          point: screenTopLeft.add({x: 0, y: px(offset)}),
           size: [px(screenWidth), px(kumikoFace)],
           strokeColor: 'black',
           fillColor: 'brown',
         }));
+        offset += kumikoFace + horzSpacing;
       }
-      
+
       // Calculate how much the thing masses.
       var totalMass = 0;
       parts.forEach(function(part) {
@@ -135,7 +140,7 @@
 
       paper.view.draw();
     };
-    
+
     var zoom = function(zoomScale) {
       console.log('Zooming!');
       var curZoom = eval($('#px-per-inch')[0].value);
@@ -144,7 +149,7 @@
     };
 
     $(document).ready(function() {
-  		paper.setup($('#myCanvas')[0]);
+      paper.setup($('#myCanvas')[0]);
       doDrawing();
 
       $('input').change(doDrawing);
@@ -215,14 +220,14 @@
             <td>inches</td>
           </tr>
           <tr>
-            <td>Vertical spacing</td>
+            <td>Vertical kumiko spacing</td>
             <td><span id="vert-spacing"></span></td>
-            <td>inches (mid point)</td>
+            <td>inches (to left)</td>
           </tr>
           <tr>
-            <td>Horizontal spacing</td>
+            <td>Horiz kumiko spacing</td>
             <td><span id="horz-spacing"></span></td>
-            <td>inches (mid point)</td>
+            <td>inches (to top)</td>
           </tr>
         </tr>
       </table>
