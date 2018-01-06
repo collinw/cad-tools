@@ -23,49 +23,72 @@
     // Source: http://www.wood-database.com/african-padauk/
     var PADAUK_DENSITY = WATER_DENSITY * 0.75;
 
-    var px = function(inches) {
+    var mm = function(inches) {
+      return inches * MM_PER_INCH;
+    }
+
+    var px = function(mm) {
       var pxPerInch = eval($('#px-per-inch')[0].value);
-      return inches * pxPerInch;
+      return mm / MM_PER_INCH * pxPerInch;
     };
 
-    var drawRing = function(outerRadius, innerRadius) {
+    var drawSquare = function(outerRadiusMm, innerRadiusMm) {
+      var outerPx = px(outerRadiusMm);
+      var innerPx = px(innerRadiusMm);
+      var outer = new paper.Path.Rectangle({
+        point: paper.view.center.subtract({x: outerPx, y: outerPx}),
+        size: [outerPx * 2, outerPx * 2],
+        fillColor: 'brown',
+      });
+      var inner = new paper.Path.Rectangle({
+        point: paper.view.center.subtract({x: innerPx, y: innerPx}),
+        size: [innerPx * 2, innerPx * 2],
+        fillColor: 'white',
+      });
+      var outerEdge = outerRadiusMm * 2;
+      var innerEdge = innerRadiusMm * 2;
+      return outerEdge * outerEdge - innerEdge * innerEdge;
+    };
+
+    var drawRing = function(outerRadiusMm, innerRadiusMm) {
       var outer = new paper.Path.Circle({
         center: paper.view.center,
-        radius: outerRadius,
+        radius: px(outerRadiusMm),
         fillColor: 'brown',
       });
       var inner = new paper.Path.Circle({
         center: paper.view.center,
-        radius: innerRadius,
+        radius: px(innerRadiusMm),
         fillColor: 'white',
       });
+      return (PI * outerRadiusMm * outerRadiusMm) - (PI * innerRadiusMm * innerRadiusMm);
     };
 
-    var ringMass = function(outerRadius, innerRadius, depth, density) {
-      var outerMm = outerRadius * MM_PER_INCH;
-      var innerMm = innerRadius * MM_PER_INCH;
-      var depthMm = depth * MM_PER_INCH;
-
-      var surfaceArea = (PI * outerMm * outerMm) - (PI * innerMm * innerMm);
-      var volume = surfaceArea * depthMm;
-      return volume * density;
-    }
+    var shapes = {
+      'Ring': drawRing,
+      'Square': drawSquare,
+    };
 
     var doDrawing = function() {
       paper.project.clear();
 
+      var drawFunc = shapes[$('#shape').val()];
+
+      // Convert to metric as early as possible, do all further calculations in
+      // metric for consistency.
+      var shape = $('#num-rings')[0].value.trim();
       var numRings = eval($('#num-rings')[0].value);
-      var total = eval($('#total-radius')[0].value);
-      var width = eval($('#ring-width')[0].value);
-      var depth = eval($('#ring-depth')[0].value);
-      var gap = eval($('#ring-gap')[0].value);
+      var total = mm(eval($('#total-radius')[0].value));
+      var width = mm(eval($('#ring-width')[0].value));
+      var depth = mm(eval($('#ring-depth')[0].value));
+      var gap = mm(eval($('#ring-gap')[0].value));
 
       var mass = 0;
       var outer = total;
       for (var i = 0; i < numRings; i++) {
         var inner = outer - width;
-        drawRing(px(outer), px(inner));
-        mass += ringMass(outer, inner, depth, PADAUK_DENSITY);
+        var area = drawFunc(outer, inner);
+        mass += area * depth * PADAUK_DENSITY;
         outer = inner - gap;
       }
       $('#total-mass').text(mass.toPrecision(4));
@@ -74,15 +97,26 @@
     };
 
     $(document).ready(function() {
+      Object.keys(shapes).forEach(function(name) {
+        $('#shape').append('<option>' + name + '</option>');
+      });
+
   		paper.setup($('#myCanvas')[0]);
       doDrawing();
 
       $('input').change(doDrawing);
+      $('select').change(doDrawing);
     });
   </script>
 </head>
 <body>
   <table>
+    <tr>
+      <td>Shape</td>
+      <td>
+        <select id="shape"></select>
+      </td>
+    </tr>
     <tr>
       <td>Pixels per inch</td>
       <td><input type="text" id="px-per-inch" value="132"></td>
