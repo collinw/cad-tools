@@ -56,9 +56,9 @@
       var totalDims = new paper.Point(px(width), px(height));
       var topLeft = paper.view.center.subtract(totalDims.divide(2));
       var bottomRight = topLeft.add(totalDims);
-      var bottomLeft = bottomRight.subtract(new paper.Point(px(width), 0));
+      var bottomLeft = bottomRight.subtract({x: px(width), y: 0});
       
-      var topCenter = topLeft.add(new paper.Point(px(width), 0));
+      var topCenter = topLeft.add({x: px(width), y: 0});
       
       // Draw the stiles.
       parts.push(new paper.Path.Rectangle({
@@ -68,7 +68,7 @@
           fillColor: 'brown',
       }));
       parts.push(new paper.Path.Rectangle({
-        point: topLeft.add(new paper.Point(px(width) - px(stileWidth), 0)),
+        point: topLeft.add({x: px(width) - px(stileWidth), y: 0}),
         size: [px(stileWidth), px(height)],
         strokeColor: 'black',
           fillColor: 'brown',
@@ -77,19 +77,19 @@
       // Draw the rails.
       var railWidth = width - 2 * stileWidth;
       parts.push(new paper.Path.Rectangle({
-        point: topLeft.add(new paper.Point(px(stileWidth), 0)),
+        point: topLeft.add({x: px(stileWidth), y: 0}),
         size: [px(railWidth), px(railHeight)],
         strokeColor: 'black',
           fillColor: 'brown',
       }));
       parts.push(new paper.Path.Rectangle({
-        point: bottomLeft.add(new paper.Point(px(stileWidth), -px(railHeight))),
+        point: bottomLeft.add({x: px(stileWidth), y: -px(railHeight)}),
         size: [px(railWidth), px(railHeight)],
         strokeColor: 'black',
           fillColor: 'brown',
       }));
       
-      var screenTopLeft = topLeft.add(new paper.Point(px(stileWidth), px(railHeight)));
+      var screenTopLeft = topLeft.add({x: px(stileWidth), y: px(railHeight)});
       var screenWidth = width - stileWidth * 2;
       var screenHeight = height - railHeight * 2;
       
@@ -106,7 +106,7 @@
       for (var i = 1; i <= numVertKumiko; i++) {
         var horzOffset = vertSpacing * i - (kumikoFace / 2);
         parts.push(new paper.Path.Rectangle({
-          point: screenTopLeft.add(new paper.Point(px(horzOffset), 0)),
+          point: screenTopLeft.add({x: px(horzOffset), y: 0}),
           size: [px(kumikoFace), px(screenHeight)],
           strokeColor: 'black',
           fillColor: 'brown',
@@ -117,7 +117,7 @@
       for (var i = 1; i <= numHorzKumiko; i++) {
         var vertOffset = horzSpacing * i - (kumikoFace / 2);
         parts.push(new paper.Path.Rectangle({
-          point: screenTopLeft.add(new paper.Point(0, px(vertOffset))),
+          point: screenTopLeft.add({x: 0, y: px(vertOffset)}),
           size: [px(screenWidth), px(kumikoFace)],
           strokeColor: 'black',
           fillColor: 'brown',
