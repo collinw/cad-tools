@@ -9,3 +9,4 @@ Various tools for doing CAD layout for jewelry and woodworking projects.
 
 * [Fraction.js](https://github.com/infusion/Fraction.js)
 * [Paper.js](http://paperjs.org)
+* [three.js](http://threejs.org)
