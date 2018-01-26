@@ -20,8 +20,6 @@
     var PI = 3.141592;
 
     var WATER_DENSITY = 0.001;  // Grams / mm^3
-    // Source: http://www.wood-database.com/african-padauk/
-    var PADAUK_DENSITY = WATER_DENSITY * 0.75;
 
     var mm = function(inches) {
       return inches * MM_PER_INCH;
@@ -69,6 +67,14 @@
       'Square': drawSquare,
     };
 
+    // Densities are given in grams / mm^3.
+    var materialDensity = {
+      // Source: http://www.wood-database.com/african-padauk/
+      "Paduak": WATER_DENSITY * 0.75,
+      // Source: https://www.aqua-calc.com/page/density-table/substance/aluminum
+      "Aluminum": 0.0027,
+    };
+
     var doDrawing = function() {
       paper.project.clear();
 
@@ -83,12 +89,13 @@
       var depth = mm(eval($('#ring-depth')[0].value));
       var gap = mm(eval($('#ring-gap')[0].value));
 
+      var density = materialDensity[$('#material').val()];
       var mass = 0;
       var outer = total;
       for (var i = 0; i < numRings; i++) {
         var inner = outer - width;
         var area = drawFunc(outer, inner);
-        mass += area * depth * PADAUK_DENSITY;
+        mass += area * depth * density;
         outer = inner - gap;
       }
       $('#total-mass').text(mass.toPrecision(4));
@@ -101,6 +108,10 @@
         $('#shape').append('<option>' + name + '</option>');
       });
 
+      Object.keys(materialDensity).forEach(function(name) {
+        $('#material').append('<option>' + name + '</option>');
+      });
+
       paper.setup($('#myCanvas')[0]);
       doDrawing();
 
@@ -111,6 +122,12 @@
 </head>
 <body>
   <table>
+    <tr>
+      <td>Material</td>
+      <td>
+        <select id="material"></select>
+      </td>
+    </tr>
     <tr>
       <td>Shape</td>
       <td>
