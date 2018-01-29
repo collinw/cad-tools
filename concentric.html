@@ -1,13 +1,22 @@
 <html>
 <head>
   <style>
+    #controls {
+      margin-bottom: 1em;
+    }
     #myCanvas {
       border: 1px solid black;
       width: 1000px;
-      margin-top: 1em;
+      float: left;
     }
     #total-mass {
       font-weight: bold;
+    }
+    #parts-list {
+      border: 1px solid black;
+      width: 350px;
+      float: right;
+      padding: 1em;
     }
   </style>
   <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
@@ -43,9 +52,13 @@
         size: [innerPx * 2, innerPx * 2],
         fillColor: 'white',
       });
+
       var outerEdge = outerRadiusMm * 2;
       var innerEdge = innerRadiusMm * 2;
-      return outerEdge * outerEdge - innerEdge * innerEdge;
+      var area = outerEdge * outerEdge - innerEdge * innerEdge;
+      // TODO: make the part description use consistent units.
+      var desc = 'Square (outer radius ' + outerRadiusMm.toPrecision(3) + 'mm, inner radius ' + innerRadiusMm.toPrecision(3) + ' mm)';
+      return {area: area, description: desc};
     };
 
     var drawRing = function(outerRadiusMm, innerRadiusMm) {
@@ -59,7 +72,11 @@
         radius: px(innerRadiusMm),
         fillColor: 'white',
       });
-      return (PI * outerRadiusMm * outerRadiusMm) - (PI * innerRadiusMm * innerRadiusMm);
+
+      var area = (PI * outerRadiusMm * outerRadiusMm) - (PI * innerRadiusMm * innerRadiusMm);
+      // TODO: make the part description use consistent units.
+      var desc = 'Ring (outer radius ' + outerRadiusMm.toPrecision(3) + ' mm, inner radius ' + innerRadiusMm.toPrecision(3) + ' mm)';
+      return {area: area, description: desc};
     };
 
     var shapes = {
@@ -77,6 +94,7 @@
 
     var doDrawing = function() {
       paper.project.clear();
+      $('#parts-list').empty();
 
       var drawFunc = shapes[$('#shape').val()];
 
@@ -94,9 +112,11 @@
       var outer = total;
       for (var i = 0; i < numRings; i++) {
         var inner = outer - width;
-        var area = drawFunc(outer, inner);
-        mass += area * depth * density;
+        var shape = drawFunc(outer, inner);
+        mass += shape.area * depth * density;
         outer = inner - gap;
+
+        $('#parts-list').append('<p>' + shape.description + '</p>');
       }
       $('#total-mass').text(mass.toPrecision(4));
 
@@ -121,7 +141,7 @@
   </script>
 </head>
 <body>
-  <table>
+  <table id="controls">
     <tr>
       <td>Material</td>
       <td>
@@ -168,6 +188,11 @@
       <td><span id="total-mass"></span></td>
       <td>grams</td>
   </table>
-  <canvas id="myCanvas" resize></canvas>
+  <div>
+    <canvas id="myCanvas" resize></canvas>
+    <div id="parts-list">
+      <p>Part</p>
+    </div>
+  </div>
 </body>
 </html>
