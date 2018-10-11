@@ -107,7 +107,7 @@
 
       // Draw vertical kumiko.
       var offset = vertSpacing;
-      for (var i = 1; i <= numVertKumiko; i++) {
+      for (var i = 0; i < numVertKumiko; i++) {
         parts.push(new paper.Path.Rectangle({
           point: screenTopLeft.add({x: px(offset), y: 0}),
           size: [px(kumikoFace), px(screenHeight)],
@@ -119,7 +119,7 @@
 
       // Draw horizontal kumiko.
       var offset = horzSpacing
-      for (var i = 1; i <= numHorzKumiko; i++) {
+      for (var i = 0; i < numHorzKumiko; i++) {
         parts.push(new paper.Path.Rectangle({
           point: screenTopLeft.add({x: 0, y: px(offset)}),
           size: [px(screenWidth), px(kumikoFace)],
